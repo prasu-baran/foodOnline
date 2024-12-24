@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = config('DEBUG',default=False,cast=bool)
+DEBUG = config('DEBUG',default=True,cast=bool)
 
 ALLOWED_HOSTS = []
 
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "accounts",
     "vendor",
+    "menu",
 ]
 
 MIDDLEWARE = [
@@ -64,7 +65,8 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
-                "accounts.context_processors.get_vendor"
+                "accounts.context_processors.get_vendor",
+                "accounts.context_processors.get_google_api",
             ],
         },
     },
@@ -149,3 +151,4 @@ EMAIL_HOST_PASSWORD=''
 
 EMAIL_USE_TLS= True
 DEFAULT_FROM_EMAIL='foodOnline Marketplace <prasubaran@gmail.com>'
+GOOGLE_API_KEY='AIzaSyCVT38JAt564v-2h1KHyV8_6qdikugGaHA'
