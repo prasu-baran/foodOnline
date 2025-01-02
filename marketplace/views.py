@@ -6,6 +6,9 @@ from django.db.models import Prefetch
 from django.http import HttpResponse,JsonResponse
 from .models import Cart
 from marketplace.context_processors import get_cart_counter,get_cart_amount
+from django.db.models import Q
+from vendor.models import OpeningHour
+from datetime import date,datetime
 
 # Create your views here.
 def marketplace(request):
@@ -17,22 +20,50 @@ def marketplace(request):
     }
     return render(request, 'marketplace/listing.html',context)
 
-def vendor_detail(request,vendor_slug):
-    vendor=get_object_or_404(Vendor,vendor_slug=vendor_slug)
-    Categories=Category.objects.filter(vendor=vendor).prefetch_related(
+def vendor_detail(request, vendor_slug):
+    # Fetch the vendor object
+    vendor = get_object_or_404(Vendor, vendor_slug=vendor_slug)
+    
+    # Fetch categories and prefetch related food items
+    categories = Category.objects.filter(vendor=vendor).prefetch_related(
         Prefetch('fooditems', queryset=FoodItem.objects.filter(is_available=True)),
     )
-    if request.user.is_authenticated:
-        cart_items=Cart.objects.filter(user=request.user)
-    else:
-        cart_items=None
-    context={
-        'vendor':vendor,
-        'categories':Categories,
+    
+    # Fetch all opening hours for the vendor
+    opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day', '-from_hour')
+    
+    # Determine today's day of the week
+    today_date = date.today()
+    today = today_date.isoweekday()
+    
+    # Get today's opening hours
+    current_opening_hour = OpeningHour.objects.filter(vendor=vendor, day=today)
+    
+    # Determine if the vendor is currently open
+    now = datetime.now().time()  # Current time as a datetime.time object
+    is_open = False  # Initialize
+    for hour in current_opening_hour:
+        start = datetime.strptime(hour.from_hour, "%I:%M %p").time()
+        end = datetime.strptime(hour.to_hour, "%I:%M %p").time()
+        if start <= now <= end:
+            is_open = True
+            break
+    
+    # Fetch cart items if the user is authenticated
+    cart_items = Cart.objects.filter(user=request.user) if request.user.is_authenticated else None
+    
+    # Prepare the context for the template
+    context = {
+        'vendor': vendor,
+        'categories': categories,
         'cart_items': cart_items,
+        'opening_hours': opening_hours,
+        'current_opening_hours': current_opening_hour,
+        'is_open': is_open,
     }
-    return render(request,'marketplace/vendor_detail.html',context)
-
+    
+    # Render the template with the context
+    return render(request, 'marketplace/vendor_detail.html', context)
 def add_to_cart(request,food_id):
     if request.user.is_authenticated:
         if request.headers.get('x-requested-with')=='XMLHttpRequest':
@@ -101,6 +132,31 @@ def delete_cart(request,cart_id):
                return JsonResponse({'status':'Failed','message':'Cart item does not exist..!'})
        else:
            return JsonResponse({'status':'Failed','message':'Invalid Request'})
+
+def search(request):
+    keyword = request.GET.get('keyword', '').strip()  # Extract the 'keyword' parameter from the request
+    vendors = Vendor.objects.none()  # Start with an empty queryset
+
+    if keyword:  # Only perform the search if a keyword is provided
+        # Get vendors based on matching food items
+        food_item_vendors = FoodItem.objects.filter(
+            food_title__icontains=keyword, is_available=True
+        ).values_list('vendor', flat=True)
+
+        # Get vendors based on matching vendor names
+        vendors = Vendor.objects.filter(
+            Q(id__in=food_item_vendors) |  # Vendors with matching food items
+            Q(vendor_name__icontains=keyword, is_approved=True, user__is_active=True)  # Vendors with matching names
+        )
+
+    vendor_count = vendors.count()  # Count the results
+
+    context = {
+        'vendors': vendors,  # Filtered vendors
+        'vendor_count': vendor_count,  # Count of results
+    }
+    return render(request, 'marketplace/listing.html', context)
+
        
            
 

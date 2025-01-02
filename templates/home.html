@@ -22,11 +22,11 @@
 				</div>
 				<div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
 					<div class="main-search fancy bg-holder">
-						<form>
+						<form action="{% url 'search' %}" method="GET">
 							<div class="row">
 								<div class="col-lg-6 col-md-6 col-sm-5 col-xs-12">
 									<div class="field-holder">
-										<input type="text" placeholder="Restaurant name" name="restaurant_name">
+										<input type="text" placeholder="Restaurant name or Dish name" name="keyword">
 									</div>
 								</div>
 								<div class="col-lg-4 col-md-4 col-sm-5 col-xs-12">
@@ -161,9 +161,15 @@
 														{% endif %}
 													</a>
 												</figure>
-												<span class="restaurant-status close">
-													<em class="bookmarkRibbon"></em>Close
+												{% if vendor.is_open %}
+												<span class="restaurant-status open">
+													<em class="bookmarkRibbon"></em>Open
 												</span>
+												{% else %}
+												<span class="restaurant-status close">
+													<em class="bookmarkRibbon red"></em>Closed
+													</span>
+												{% endif %}
 											</div>
 											<div class="text-holder">
 												<div class="list-rating">
@@ -174,7 +180,7 @@
 												</div>
 												<div class="post-title">
 													<h5>
-														<a href="listing-detail.html">{{ vendor }}</a>
+														<a href="{%  url 'vendor_detail' vendor.vendor_slug %}">{{ vendor }}</a>
 													</h5>
 												</div>
 												{% if vendor.user_profile.city and vendor.user_profile.state and vendor.user_profile.pincode %}

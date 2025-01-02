@@ -209,4 +209,162 @@ $(document).ready(function() {
         $('#tax').html(tax);
         $('#total').html(grand_total);
     }
+  //document ready
+  // Use event delegation for the add_hour button
+  $(document).on('click', '.remove_hour', function(e) {
+    e.preventDefault();
+
+    const url = $(this).attr('data-url'); // Get the URL for removing the opening hour
+    const row = $(this).closest('tr');   // Identify the table row for this item
+
+    $.ajax({
+        type: 'GET',
+        url: url,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                // Remove the row with a fade-out animation
+                row.fadeOut(300, function() {
+                    $(this).remove(); // Completely remove the row after the fade-out
+                });
+
+                Swal.fire({
+                    title: 'Success!',
+                    text: 'Opening hour removed successfully.',
+                    icon: 'success',
+                    confirmButtonColor: '#3085d6',
+                });
+            } else {
+                Swal.fire({
+                    title: 'Error!',
+                    text: response.message || 'Failed to remove the opening hour.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                });
+            }
+        },
+        error: function(xhr) {
+            Swal.fire({
+                title: 'Error!',
+                text: 'Failed to remove the opening hour. Please try again.',
+                icon: 'error',
+                confirmButtonColor: '#3085d6',
+            });
+        }
+    });
 });
+
+
+// Add opening hours form handler
+$('#opening-hours').on('submit', function(e) {
+    e.preventDefault();
+    const url = $('#add_hour_url').val();
+    const formData = new FormData(this);
+
+    $.ajax({
+        type: 'POST',
+        url: url,
+        data: formData,
+        processData: false,
+        contentType: false,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        },
+        success: function(response) {
+            if (response.status === 'success') {
+                location.reload();
+            }
+        }
+    });
+});
+ 
+
+  $(document).ready(function() {
+    $('.add_hour').on('click', function (e) {
+        e.preventDefault();
+        
+        var form = $('#opening-hours');
+        var day = $('#id_day').val();
+        var from_hour = $('#id_from_hour').val();
+        var to_hour = $('#id_to_hour').val();
+        var is_closed = $('#id_is_closed').is(':checked') ? 'True' : 'False';
+        var csrf_token = form.find('input[name=csrfmiddlewaretoken]').val();
+        var url = $('#add_hour_url').val();
+        
+        if (!day || (!is_closed && (!from_hour || !to_hour))) {
+            Swal.fire({
+                text: 'Please fill in all required details.',
+                icon: 'info',
+                confirmButtonColor: '#3085d6',
+            });
+            return;
+        }
+
+        $.ajax({
+            type: 'POST',
+            url: url,
+            data: {
+                'day': day,
+                'from_hour': from_hour,
+                'to_hour': to_hour,
+                'is_closed': is_closed,
+                'csrfmiddlewaretoken': csrf_token
+            },
+            success: function (response) {
+                if (response.status === 'success') {
+                    // Create the time display string
+                    var timeDisplay = response.is_closed ? 
+                        'Closed' : 
+                        `${response.from_hour}-${response.to_hour}`;
+                    
+                    // Create new row using response data
+                    var html = `
+                        <tr id="hour-${response.id}">
+                            <td><b>${response.day}</b></td>
+                            <td>${timeDisplay}</td>
+                            <td><a href="#"class='remove_hour'data-url="/vendor/opening-hour/remove/"+response.id+>Remove</a></td>
+                        </tr>
+                    `;
+                    
+                    // Append new row
+                    $('.opening_hours tbody').append(html);
+                    
+                    // Reset form
+                    $('#opening-hours')[0].reset();
+
+                    // Show success message
+                    Swal.fire({
+                        title: 'Success!',
+                        text: 'Opening hours added successfully',
+                        icon: 'success',
+                        confirmButtonColor: '#3085d6',
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: response.error || 'An error occurred',
+                        icon: 'error',
+                        confirmButtonColor: '#3085d6',
+                    });
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error('Error:', error);
+                Swal.fire({
+                    title: 'Error!',
+                    text: 'Failed to add the opening hour. Please try again.',
+                    icon: 'error',
+                    confirmButtonColor: '#3085d6',
+                });
+            }
+        });
+    });
+});
+
+
+});
+
+
+
