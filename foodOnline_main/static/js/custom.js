@@ -10,7 +10,7 @@ $(document).ready(function() {
                     $('#cart_counter').html(response.cart_counter['cart_count']);
 
                     // Apply cart amounts
-                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax'], response.cart_amount['grand_total']);
+                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax_dict'], response.cart_amount['grand_total']);
 
                     // Update quantities for items
                     response.cart_items.forEach(item => {
@@ -68,7 +68,7 @@ $(document).ready(function() {
                 } else {
                     $('#cart_counter').html(response.cart_counter['cart_count']);
                     $('#qty-' + food_id).html(response.qty);
-                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax'], response.cart_amount['grand_total']);
+                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax_dict'], response.cart_amount['grand_total']);
                 }
             }
         });
@@ -111,7 +111,7 @@ $(document).ready(function() {
                 } else {
                     $('#cart_counter').html(response.cart_counter['cart_count']);
                     $('#qty-' + food_id).html(response.qty);
-                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax'], response.cart_amount['grand_total']);
+                    applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax_dict'], response.cart_amount['grand_total']);
 
                     if (response.qty <= 0 && window.location.pathname === '/cart') {
                         thisItem.remove();
@@ -157,7 +157,7 @@ $(document).ready(function() {
                             $('#cart_counter').html(response.cart_counter['cart_count']);
     
                             // Update the cart amounts (subtotal, tax, total)
-                            applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax'], response.cart_amount['grand_total']);
+                            applyCartAmounts(response.cart_amount['subtotal'], response.cart_amount['tax_dict'], response.cart_amount['grand_total']);
     
                             // Show success message
                             Swal.fire(
@@ -204,10 +204,16 @@ $(document).ready(function() {
         });
     });
 
-    function applyCartAmounts(subtotal, tax, grand_total) {
+    function applyCartAmounts(subtotal, tax_dict, grand_total) {
         $('#subtotal').html(subtotal);
-        $('#tax').html(tax);
+        console.log(tax_dict)
         $('#total').html(grand_total);
+        for(key1 in tax_dict){
+            for(key2 in tax_dict[key1]){
+                $('#tax-'+key1).html(tax_dict[key1][key2])
+                
+            }
+        }
     }
   //document ready
   // Use event delegation for the add_hour button
