@@ -41,6 +41,8 @@ INSTALLED_APPS = [
     "vendor",
     "menu",
     "marketplace",
+    "customers",
+    "orders",
 ]
 
 MIDDLEWARE = [
@@ -70,6 +72,8 @@ TEMPLATES = [
                 "accounts.context_processors.get_google_api",
                 "marketplace.context_processors.get_cart_counter",
                 "marketplace.context_processors.get_cart_amount",
+                "accounts.context_processors.get_user_profile",
+                "accounts.context_processors.get_paypal_client_id",
             ],
         },
     },
@@ -155,3 +159,5 @@ EMAIL_HOST_PASSWORD='hxtt sily tkht legt'
 EMAIL_USE_TLS= True
 DEFAULT_FROM_EMAIL='foodOnline Marketplace <prasubaran@gmail.com>'
 GOOGLE_API_KEY='hxtt sily tkht legt'
+PAYPAL_CLIENT_ID='AWp8HD_DPM0nu8_lj_rwbOLSACs_9HK_Eiodq3xKi5V_sgkSboADfoxaZ1cD5mWBZknoof53hppFhRl4'
+SECURE_CROSS_ORIGIN_OPENER_POLICY: str = 'same-origin-allow-popups'

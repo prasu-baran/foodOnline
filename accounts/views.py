@@ -1,5 +1,7 @@
 from django.shortcuts import render,redirect
 from django.shortcuts import HttpResponse
+
+from orders.models import Order
 from .utils import detectUser,send_verification_email,send_password_reset_email
 from .forms import UserForm,UserProfileForm
 from .models import User,UserProfile
@@ -127,7 +129,14 @@ def logout(request):
 @login_required(login_url='login')
 @user_passes_test(check_role_customer)
 def custdashboard(request):
-    return render(request,'accounts/custdashboard.html')
+    orders=Order.objects.filter(user=request.user,is_ordered=True)
+    recent_orders=orders[:3]
+    context={
+        'orders':orders,
+        'order_counts':orders.count(),
+        'recent_orders':recent_orders,
+    }
+    return render(request,'accounts/custdashboard.html', context)
 
 
 @login_required(login_url='login')

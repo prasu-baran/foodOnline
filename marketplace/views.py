@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from accounts.models import UserProfile
 from vendor.models import Vendor
 from django.shortcuts import get_object_or_404
 from menu.models import Category,FoodItem
@@ -9,6 +10,8 @@ from marketplace.context_processors import get_cart_counter,get_cart_amount
 from django.db.models import Q
 from vendor.models import OpeningHour
 from datetime import date,datetime
+from orders.forms import OrderForm
+from django.shortcuts import redirect
 
 # Create your views here.
 def marketplace(request):
@@ -156,6 +159,31 @@ def search(request):
         'vendor_count': vendor_count,  # Count of results
     }
     return render(request, 'marketplace/listing.html', context)
+
+
+def checkout(request):
+    cart_items=Cart.objects.filter(user=request.user).order_by('created_at')
+    cart_count=cart_items.count()
+    user_profile=UserProfile.objects.get(user=request.user)
+    default_values = {
+        'first_name': request.user.first_name,
+        'last_name': request.user.last_name,
+        'phone': request.user.phone,
+        'email': request.user.email,
+        'address': user_profile.address,
+        'country': user_profile.country,
+        'state': user_profile.state,
+        'city': user_profile.city,
+        'pin_code': user_profile.pincode,
+    }
+    form=OrderForm(initial=default_values)
+    if cart_count<=0:
+        return redirect('marketplace')
+    context={
+        'form':form,
+        'cart_items':cart_items
+    }
+    return render(request,'marketplace/checkout.html',context)
 
        
            
