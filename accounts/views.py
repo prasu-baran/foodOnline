@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.shortcuts import render,redirect
 from django.shortcuts import HttpResponse
 
@@ -142,11 +143,29 @@ def custdashboard(request):
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor)
 def vendordashboard(request):
-    vendor=Vendor.objects.get(user=request.user)
-    context={
-        'vendor':vendor,
-    }
-    return render(request,'accounts/vendordashboard.html',context)
+    vendor = Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('created_at')
+    recent_orders = orders[:10]
+
+    # current month's revenue
+    current_month = datetime.now().month
+    current_month_orders = orders.filter(vendors__in=[vendor.id], created_at__month=current_month)
+    current_month_revenue = 0
+    for i in current_month_orders:
+        current_month_revenue += i.get_total_by_vendor()['subtotal']
+    # total revenue
+    total_revenue = 0
+    for i in orders:
+        total_revenue += i.get_total_by_vendor()['subtotal']
+    context = {
+        'orders': orders,
+        'orders_count': orders.count(),
+        'recent_orders': recent_orders,
+        'total_revenue': total_revenue,
+        'current_month_revenue': current_month_revenue,
+   }
+    
+    return render(request, 'accounts/vendordashboard.html', context)
 
 @login_required(login_url='login')
 def myAccount(request):

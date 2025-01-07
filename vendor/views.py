@@ -1,4 +1,6 @@
 from django.shortcuts import render,get_object_or_404,redirect
+
+from orders.models import Order, OrderedFood
 from .forms import VendorForm,OpeningHourForm
 from accounts.forms import UserProfileForm
 from accounts.models import UserProfile
@@ -246,3 +248,31 @@ def remove_opening_hour(request, pk=None):
         return JsonResponse({'status': 'success', 'id': pk})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    
+    
+def order_detail(request,order_number):
+    try:
+        order = Order.objects.get(order_number=order_number, is_ordered=True)
+        ordered_food = OrderedFood.objects.filter(order=order, fooditem__vendor=get_vendor(request))
+        print(ordered_food)
+        context = {
+            'order': order,
+            'ordered_food': ordered_food,
+            'subtotal':order.get_total_by_vendor()['subtotal'],
+            'tax_data':order.get_total_by_vendor()['tax_dict'],
+        }
+    except:
+        print('sdsfsssssds')
+        return redirect('vendor')
+    return render(request, 'vendor/order_detail.html', context)
+
+
+def vendor_my_orders(request):
+    vendor = Vendor.objects.get(user=request.user)
+    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('created_at')
+    context={
+        'orders':orders,
+    }
+    return render(request,'vendor/my_order.html',context)
+  
+     
