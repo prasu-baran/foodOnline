@@ -1,6 +1,12 @@
+import uuid
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.db.models.fields.related import OneToOneField
+
+
+def generate_referral_code():
+    code = str(uuid.uuid4())[:8].upper()
+    return code
 
 # Create your models here.
 class UserManager(BaseUserManager):
@@ -58,7 +64,8 @@ class User(AbstractBaseUser):
     is_staff=models.BooleanField(default=True)
     is_active=models.BooleanField(default=False)
     is_superadmin=models.BooleanField(default=False)
-    
+    referral_code=models.CharField(max_length=20, unique=True, blank=True)
+
     USERNAME_FIELD='email'
     REQUIRED_FIELDS=['username','first_name','last_name']
     
@@ -75,8 +82,16 @@ class User(AbstractBaseUser):
             user_role='Restaurant'
         else:
             user_role='Customer'
-        return user_role        
-    
+        return user_role
+
+    def save(self, *args, **kwargs):
+        if not self.referral_code:
+            self.referral_code = generate_referral_code()
+            while User.objects.filter(referral_code=self.referral_code).exists():
+                self.referral_code = generate_referral_code()
+        super().save(*args, **kwargs)
+
+
 
 class UserProfile(models.Model):
     user =OneToOneField(User,on_delete=models.CASCADE,blank=True,null=True)
@@ -89,12 +104,35 @@ class UserProfile(models.Model):
     pincode=models.CharField(max_length=6,blank=True,null=True)
     latitude=models.CharField(max_length=20,blank=True,null=True)
     longitude=models.CharField(max_length=20,blank=True,null=True)
+    loyalty_points=models.PositiveIntegerField(default=0)
     created_at=models.DateTimeField(auto_now_add=True)
     modified_at=models.DateTimeField(auto_now=True)
     
     def __str__(self):
-        return self.user.email 
-    
+        return self.user.email
+
   #  def full_address(self):
        # return f"{self.address_line_1} , {self.address_line_2}"
-    
+
+
+class UserAddress(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='addresses')
+    label = models.CharField(max_length=30, default='Home')
+    address = models.CharField(max_length=250)
+    country = models.CharField(max_length=30, blank=True)
+    state = models.CharField(max_length=30, blank=True)
+    city = models.CharField(max_length=50, blank=True)
+    pincode = models.CharField(max_length=10, blank=True)
+    is_default = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name_plural = 'User Addresses'
+
+    def save(self, *args, **kwargs):
+        if self.is_default:
+            UserAddress.objects.filter(user=self.user, is_default=True).exclude(pk=self.pk).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f'{self.user.email} - {self.label}'

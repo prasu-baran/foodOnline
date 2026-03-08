@@ -150,15 +150,16 @@ MESSAGE_TAGS ={
     messages.ERROR:'danger',
 }
 
- #Email Configuration
+# Email Configuration
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST='smtp.gmail.com'
-EMAIL_PORT=587
-EMAIL_HOST_USER='prasubaran@gmail.com'
-EMAIL_HOST_PASSWORD='hxtt sily tkht legt'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_USE_TLS = True
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='foodOnline <noreply@example.com>')
 
-EMAIL_USE_TLS= True
-DEFAULT_FROM_EMAIL='foodOnline Marketplace <prasubaran@gmail.com>'
-GOOGLE_API_KEY='hxtt sily tkht legt'
-PAYPAL_CLIENT_ID='AWp8HD_DPM0nu8_lj_rwbOLSACs_9HK_Eiodq3xKi5V_sgkSboADfoxaZ1cD5mWBZknoof53hppFhRl4'
-SECURE_CROSS_ORIGIN_OPENER_POLICY: str = 'same-origin-allow-popups'
+GOOGLE_API_KEY = config('GOOGLE_API_KEY', default='')
+PAYPAL_CLIENT_ID = config('PAYPAL_CLIENT_ID', default='')
+
+SECURE_CROSS_ORIGIN_OPENER_POLICY = 'same-origin-allow-popups'

@@ -51,7 +51,14 @@
                                             {% endif %}
                                         </div>
                                         <div class="list-option">
-
+                                            {% if request.user.is_authenticated %}
+                                            <a href="#" class="toggle-favourite mr-2"
+                                               data-vendor-id="{{ vendor.id }}"
+                                               data-url="{% url 'toggle_favourite' vendor.id %}"
+                                               title="Save to favourites">
+                                                <i class="fa fa-heart-o text-danger"></i>
+                                            </a>
+                                            {% endif %}
                                             <a href="{% url 'vendor_detail' vendor.vendor_slug %}" class="viewmenu-btn text-color">View Menu</a>
                                         </div>
                                     </li>

@@ -30,9 +30,12 @@ class FoodItem(models.Model):
     description=models.TextField(max_length=250,blank=True)
     price=models.DecimalField(max_digits=10,decimal_places=2)
     image=models.ImageField(upload_to='foodimages')
-    is_available=models.BooleanField(default=True) 
+    is_available=models.BooleanField(default=True)
+    is_veg=models.BooleanField(default=False)
+    is_spicy=models.BooleanField(default=False)
+    allergen_info=models.CharField(max_length=200, blank=True, help_text="e.g., Contains nuts, gluten, dairy")
     created_at=models.DateTimeField(auto_now_add=True)
-    updated_at=models.DateTimeField(auto_now=True) 
+    updated_at=models.DateTimeField(auto_now=True)
     
     def __str__(self):
         return self.food_title  

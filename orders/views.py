@@ -1,9 +1,10 @@
-from django.http import HttpResponse,JsonResponse
+from django.http import HttpResponse, JsonResponse
 import simplejson as json
 from django.shortcuts import render
 from django.shortcuts import redirect
 from accounts.utils import send_notification
-from marketplace.models import Cart, Tax
+from accounts.models import UserProfile
+from marketplace.models import Cart, Tax, Coupon
 from marketplace.context_processors import get_cart_amount
 from menu.models import FoodItem
 from orders.forms import OrderForm
@@ -65,12 +66,19 @@ def place_order(request):
             order.city = form.cleaned_data['city']
             order.pin_code = form.cleaned_data['pin_code']
             order.user = request.user
-            order.total = grand_total
+            # Apply coupon discount from session
+            coupon_code = request.session.get('coupon_code', '')
+            coupon_discount = float(request.session.get('coupon_discount', 0))
+            final_total = round(grand_total - coupon_discount, 2)
+
+            order.total = final_total
             order.tax_data = json.dumps(tax_data)
-            order.total_data=json.dumps(total_data)
+            order.total_data = json.dumps(total_data)
             order.total_tax = total_tax
             order.payment_method = request.POST['payment_method']
-            order.save() 
+            order.coupon_code = coupon_code
+            order.coupon_discount = coupon_discount
+            order.save()
             order.order_number = generate_order_number(order.id)
             order.vendors.add(*vendor_ids)
             order.save()
@@ -103,7 +111,26 @@ def payments(request):
          order.payment = payment
          order.is_ordered = True
          order.save()
-         
+
+         # Increment coupon used_count if a coupon was applied
+         if order.coupon_code:
+             try:
+                 coupon = Coupon.objects.get(code=order.coupon_code)
+                 coupon.used_count += 1
+                 coupon.save(update_fields=['used_count'])
+             except Coupon.DoesNotExist:
+                 pass
+             request.session.pop('coupon_code', None)
+             request.session.pop('coupon_discount', None)
+
+         # Award loyalty points: 1 point per $1 spent
+         try:
+             profile = UserProfile.objects.get(user=request.user)
+             profile.loyalty_points += int(order.total)
+             profile.save(update_fields=['loyalty_points'])
+         except UserProfile.DoesNotExist:
+             pass
+
          cart_items = Cart.objects.filter(user=request.user)
          for item in cart_items:
             ordered_food = OrderedFood()

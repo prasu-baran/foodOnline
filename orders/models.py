@@ -50,6 +50,8 @@ class Order(models.Model):
     total_tax = models.FloatField()
     payment_method = models.CharField(max_length=25)
     status = models.CharField(max_length=15, choices=STATUS, default='New')
+    coupon_code = models.CharField(max_length=20, blank=True)
+    coupon_discount = models.FloatField(default=0)
     is_ordered = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

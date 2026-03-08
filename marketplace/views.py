@@ -2,14 +2,14 @@ from django.shortcuts import render
 from accounts.models import UserProfile
 from vendor.models import Vendor
 from django.shortcuts import get_object_or_404
-from menu.models import Category,FoodItem
-from django.db.models import Prefetch
-from django.http import HttpResponse,JsonResponse
-from .models import Cart
-from marketplace.context_processors import get_cart_counter,get_cart_amount
+from menu.models import Category, FoodItem
+from django.db.models import Prefetch, Avg
+from django.http import HttpResponse, JsonResponse
+from .models import Cart, Review, Coupon, Favourite
+from marketplace.context_processors import get_cart_counter, get_cart_amount
 from django.db.models import Q
 from vendor.models import OpeningHour
-from datetime import date,datetime
+from datetime import date, datetime
 from orders.forms import OrderForm
 from django.shortcuts import redirect
 
@@ -24,38 +24,36 @@ def marketplace(request):
     return render(request, 'marketplace/listing.html',context)
 
 def vendor_detail(request, vendor_slug):
-    # Fetch the vendor object
     vendor = get_object_or_404(Vendor, vendor_slug=vendor_slug)
-    
-    # Fetch categories and prefetch related food items
+
     categories = Category.objects.filter(vendor=vendor).prefetch_related(
         Prefetch('fooditems', queryset=FoodItem.objects.filter(is_available=True)),
     )
-    
-    # Fetch all opening hours for the vendor
+
     opening_hours = OpeningHour.objects.filter(vendor=vendor).order_by('day', '-from_hour')
-    
-    # Determine today's day of the week
     today_date = date.today()
     today = today_date.isoweekday()
-    
-    # Get today's opening hours
     current_opening_hour = OpeningHour.objects.filter(vendor=vendor, day=today)
-    
-    # Determine if the vendor is currently open
-    now = datetime.now().time()  # Current time as a datetime.time object
-    is_open = False  # Initialize
+
+    now = datetime.now().time()
+    is_open = False
     for hour in current_opening_hour:
         start = datetime.strptime(hour.from_hour, "%I:%M %p").time()
         end = datetime.strptime(hour.to_hour, "%I:%M %p").time()
         if start <= now <= end:
             is_open = True
             break
-    
-    # Fetch cart items if the user is authenticated
+
     cart_items = Cart.objects.filter(user=request.user) if request.user.is_authenticated else None
-    
-    # Prepare the context for the template
+
+    reviews = Review.objects.filter(vendor=vendor).order_by('-created_at')
+    avg_rating = reviews.aggregate(avg=Avg('rating'))['avg'] or 0
+    user_review = None
+    is_favourite = False
+    if request.user.is_authenticated:
+        user_review = Review.objects.filter(user=request.user, vendor=vendor).first()
+        is_favourite = Favourite.objects.filter(user=request.user, vendor=vendor).exists()
+
     context = {
         'vendor': vendor,
         'categories': categories,
@@ -63,9 +61,13 @@ def vendor_detail(request, vendor_slug):
         'opening_hours': opening_hours,
         'current_opening_hours': current_opening_hour,
         'is_open': is_open,
+        'reviews': reviews,
+        'avg_rating': round(avg_rating, 1),
+        'review_count': reviews.count(),
+        'user_review': user_review,
+        'is_favourite': is_favourite,
     }
-    
-    # Render the template with the context
+
     return render(request, 'marketplace/vendor_detail.html', context)
 def add_to_cart(request,food_id):
     if request.user.is_authenticated:
@@ -165,6 +167,7 @@ def checkout(request):
     cart_items=Cart.objects.filter(user=request.user).order_by('created_at')
     cart_count=cart_items.count()
     user_profile=UserProfile.objects.get(user=request.user)
+    saved_addresses = request.user.addresses.all()
     default_values = {
         'first_name': request.user.first_name,
         'last_name': request.user.last_name,
@@ -179,11 +182,91 @@ def checkout(request):
     form=OrderForm(initial=default_values)
     if cart_count<=0:
         return redirect('marketplace')
+    # Pass coupon discount if one is in session
+    coupon_discount = request.session.get('coupon_discount', 0)
+    coupon_code = request.session.get('coupon_code', '')
     context={
-        'form':form,
-        'cart_items':cart_items
+        'form': form,
+        'cart_items': cart_items,
+        'saved_addresses': saved_addresses,
+        'coupon_discount': coupon_discount,
+        'applied_coupon': coupon_code,
     }
     return render(request,'marketplace/checkout.html',context)
+
+
+def submit_review(request, vendor_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'login_required', 'message': 'Please login to leave a review.'})
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        vendor = get_object_or_404(Vendor, id=vendor_id)
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment', '').strip()
+        if not rating or not rating.isdigit() or int(rating) not in range(1, 6):
+            return JsonResponse({'status': 'error', 'message': 'Please select a valid rating (1-5).'})
+        _, created = Review.objects.update_or_create(
+            user=request.user,
+            vendor=vendor,
+            defaults={'rating': int(rating), 'comment': comment},
+        )
+        avg = Review.objects.filter(vendor=vendor).aggregate(avg=Avg('rating'))['avg'] or 0
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Review submitted!' if created else 'Review updated!',
+            'username': request.user.get_full_name() or request.user.email,
+            'rating': rating,
+            'comment': comment,
+            'avg_rating': round(avg, 1),
+        })
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+
+def apply_coupon(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'login_required', 'message': 'Please login.'})
+    if request.method == 'POST' and request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        code = request.POST.get('coupon_code', '').strip().upper()
+        cart_amount = get_cart_amount(request)
+        grand_total = cart_amount['grand_total']
+        try:
+            coupon = Coupon.objects.get(code=code)
+            is_valid, message = coupon.is_valid(grand_total)
+            if is_valid:
+                discount = coupon.get_discount_amount(grand_total)
+                final_total = round(float(grand_total) - discount, 2)
+                request.session['coupon_code'] = code
+                request.session['coupon_discount'] = discount
+                return JsonResponse({
+                    'status': 'success',
+                    'message': f'Coupon applied! You saved ${discount:.2f}.',
+                    'discount': discount,
+                    'final_total': final_total,
+                })
+            return JsonResponse({'status': 'error', 'message': message})
+        except Coupon.DoesNotExist:
+            return JsonResponse({'status': 'error', 'message': 'Invalid coupon code.'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
+
+
+def remove_coupon(request):
+    request.session.pop('coupon_code', None)
+    request.session.pop('coupon_discount', None)
+    cart_amount = get_cart_amount(request)
+    return JsonResponse({'status': 'success', 'grand_total': float(cart_amount['grand_total'])})
+
+
+def toggle_favourite(request, vendor_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({'status': 'login_required', 'message': 'Please login to save favourites.'})
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        vendor = get_object_or_404(Vendor, id=vendor_id)
+        fav = Favourite.objects.filter(user=request.user, vendor=vendor)
+        if fav.exists():
+            fav.delete()
+            return JsonResponse({'status': 'removed', 'message': 'Removed from favourites.'})
+        Favourite.objects.create(user=request.user, vendor=vendor)
+        return JsonResponse({'status': 'added', 'message': 'Added to favourites!'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'})
 
        
            

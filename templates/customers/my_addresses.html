@@ -1,0 +1,103 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'includes/alerts.html' %}
+
+<div class="main-section">
+    {% include 'customers/cover.html' %}
+    <div class="page-section account-header buyer-logged-in">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+                    {% include 'includes/c_sidebar.html' %}
+                </div>
+                <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+                    <div class="user-dashboard loader-holder">
+                        <div class="user-holder">
+                            <h5 class="text-uppercase">My Addresses</h5>
+
+                            <!-- Saved Addresses -->
+                            {% if addresses %}
+                            <div class="row mb-4">
+                                {% for addr in addresses %}
+                                <div class="col-md-6 mb-3">
+                                    <div class="card {% if addr.is_default %}border-danger{% endif %}">
+                                        <div class="card-body">
+                                            <h6 class="card-title">
+                                                {{ addr.label }}
+                                                {% if addr.is_default %}<span class="badge badge-danger ml-1">Default</span>{% endif %}
+                                            </h6>
+                                            <p class="card-text mb-1">{{ addr.address }}</p>
+                                            {% if addr.city %}<p class="card-text mb-1 text-muted">{{ addr.city }}{% if addr.state %}, {{ addr.state }}{% endif %}</p>{% endif %}
+                                            {% if addr.pincode %}<p class="card-text mb-1 text-muted">{{ addr.pincode }}</p>{% endif %}
+                                            <div class="mt-2">
+                                                {% if not addr.is_default %}
+                                                <a href="{% url 'set_default_address' addr.id %}" class="btn btn-sm btn-outline-danger mr-1">Set as Default</a>
+                                                {% endif %}
+                                                <a href="{% url 'delete_address' addr.id %}" class="btn btn-sm btn-outline-secondary"
+                                                   onclick="return confirm('Delete this address?')">Delete</a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            {% else %}
+                            <p class="text-muted mb-4">No saved addresses. Add one below.</p>
+                            {% endif %}
+
+                            <!-- Add New Address Form -->
+                            <div class="card">
+                                <div class="card-header"><strong>Add New Address</strong></div>
+                                <div class="card-body">
+                                    <form action="{% url 'add_address' %}" method="POST">
+                                        {% csrf_token %}
+                                        <div class="row">
+                                            <div class="form-group col-md-6">
+                                                <label>Label (e.g. Home, Work)</label>
+                                                <input type="text" name="label" class="form-control" value="Home" required>
+                                            </div>
+                                            <div class="form-group col-md-6">
+                                                <label>Address</label>
+                                                <input type="text" name="address" class="form-control" required>
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-md-4">
+                                                <label>City</label>
+                                                <input type="text" name="city" class="form-control">
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label>State</label>
+                                                <input type="text" name="state" class="form-control">
+                                            </div>
+                                            <div class="form-group col-md-4">
+                                                <label>Country</label>
+                                                <input type="text" name="country" class="form-control">
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="form-group col-md-4">
+                                                <label>Pincode</label>
+                                                <input type="text" name="pincode" class="form-control">
+                                            </div>
+                                            <div class="form-group col-md-8 d-flex align-items-end">
+                                                <div class="form-check mb-2">
+                                                    <input class="form-check-input" type="checkbox" name="is_default" id="is_default">
+                                                    <label class="form-check-label" for="is_default">Set as default address</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <button type="submit" class="btn btn-danger">Save Address</button>
+                                    </form>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

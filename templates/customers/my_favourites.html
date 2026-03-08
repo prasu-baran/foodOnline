@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+{% include 'includes/alerts.html' %}
+
+<div class="main-section">
+    {% include 'customers/cover.html' %}
+    <div class="page-section account-header buyer-logged-in">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3 col-md-3 col-sm-12 col-xs-12">
+                    {% include 'includes/c_sidebar.html' %}
+                </div>
+                <div class="col-lg-9 col-md-9 col-sm-12 col-xs-12">
+                    <div class="user-dashboard loader-holder">
+                        <div class="user-holder">
+                            <h5 class="text-uppercase">My Favourites</h5>
+                            {% if favourites %}
+                            <div class="listing simple">
+                                <ul>
+                                    {% for fav in favourites %}
+                                    <li style="line-height:15px;">
+                                        <div class="img-holder">
+                                            <figure>
+                                                <a href="{% url 'vendor_detail' fav.vendor.vendor_slug %}">
+                                                    {% if fav.vendor.user_profile.profile_picture %}
+                                                    <img src="{{ fav.vendor.user_profile.profile_picture.url }}" class="img-list wp-post-image" alt="">
+                                                    {% else %}
+                                                    <img src="{% static 'images/default-profile.PNG' %}" class="img-list wp-post-image" alt="">
+                                                    {% endif %}
+                                                </a>
+                                            </figure>
+                                            {% if fav.vendor.is_open %}
+                                            <span class="restaurant-status open"><em class="bookmarkRibbon"></em>Open</span>
+                                            {% else %}
+                                            <span class="restaurant-status close"><em class="bookmarkRibbon"></em>Closed</span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-holder">
+                                            <div class="post-title">
+                                                <h5><a href="{% url 'vendor_detail' fav.vendor.vendor_slug %}">{{ fav.vendor.vendor_name }}</a></h5>
+                                            </div>
+                                            {% if fav.vendor.user_profile.city %}
+                                            <span><small class="text-muted">{{ fav.vendor.user_profile.address }}, {{ fav.vendor.user_profile.city }}</small></span>
+                                            {% endif %}
+                                        </div>
+                                        <div class="list-option">
+                                            <a href="#" class="toggle-favourite text-danger mr-2"
+                                               data-vendor-id="{{ fav.vendor.id }}"
+                                               data-url="{% url 'toggle_favourite' fav.vendor.id %}"
+                                               title="Remove from favourites">
+                                                <i class="fa fa-heart fa-lg"></i>
+                                            </a>
+                                            <a href="{% url 'vendor_detail' fav.vendor.vendor_slug %}" class="viewmenu-btn text-color">View Menu</a>
+                                        </div>
+                                    </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                            {% else %}
+                            <div class="text-center py-5">
+                                <i class="fa fa-heart-o fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No favourites yet.</h5>
+                                <a href="{% url 'marketplace' %}" class="btn btn-danger mt-2">Browse Restaurants</a>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

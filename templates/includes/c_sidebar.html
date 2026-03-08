@@ -2,7 +2,9 @@
     <div class="user-nav-list">
         <ul>
             <li class="{% if request.path == '/custdashboard/' or request.path == '/customer/' %} active {% endif %}"><a href="{% url 'customer' %}"><i class="icon-dashboard3"></i>Dashboard</a></li>
-            <li class="{% if request.path == '/customer/my_orders/' or '/customer/order_detail/' in request.path  %} active {% endif %}"><a href="{% url 'customer_my_orders' %}"><i class="icon-add_shopping_cart"></i>My Orders</a></li>
+            <li class="{% if request.path == '/customer/my_orders/' or '/customer/order_detail/' in request.path %} active {% endif %}"><a href="{% url 'customer_my_orders' %}"><i class="icon-add_shopping_cart"></i>My Orders</a></li>
+            <li class="{% if request.path == '/customer/my_favourites/' %} active {% endif %}"><a href="{% url 'my_favourites' %}"><i class="fa fa-heart-o"></i> My Favourites</a></li>
+            <li class="{% if request.path == '/customer/my_addresses/' %} active {% endif %}"><a href="{% url 'my_addresses' %}"><i class="fa fa-map-marker"></i> My Addresses</a></li>
             <li class="{% if request.path == '/customer/profile/' %} active {% endif %}"><a href="{% url 'cprofile' %}"><i class="icon-build"></i>Profile Settings</a></li>
             <li><a class="logout-btn" href="{% url 'logout' %}"><i class="icon-log-out"></i>Signout</a></li>
         </ul>

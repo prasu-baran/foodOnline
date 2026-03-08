@@ -4,12 +4,9 @@
 
 <!-- Main Section Start -->
 <div class="main-section">
-    <div class="page-section restaurant-detail-image-section" style=" background: url({% if vendor.user_profile.cover_picture %} {{ vendor.user_profile.cover_picture.url }} {% else %} {% static 'images/default-cover.PNG' %} {% endif %}) no-repeat scroll 0 0 / cover;">
-        <!-- Container Start -->
+    <div class="page-section restaurant-detail-image-section" style="background: url({% if vendor.user_profile.cover_picture %}{{ vendor.user_profile.cover_picture.url }}{% else %}{% static 'images/default-cover.PNG' %}{% endif %}) no-repeat scroll 0 0 / cover;">
         <div class="container">
-            <!-- Row Start -->
             <div class="row">
-                <!-- Column Start -->
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="company-info-detail">
                         <div class="company-info">
@@ -18,12 +15,32 @@
                                     {% if vendor.user_profile.cover_picture %}
                                     <img src="{{ vendor.user_profile.profile_picture.url }}" alt="">
                                     {% else %}
-                                    <img src=" {% static 'images/default-profile.PNG' %}" alt="">
+                                    <img src="{% static 'images/default-profile.PNG' %}" alt="">
                                     {% endif %}
                                 </figure>
                             </div>
                             <div class="text-holder">
-                                <span class="restaurant-title">{{vendor}} {% if not is_open %} [Closed] {%endif%}</span>
+                                <span class="restaurant-title">
+                                    {{vendor}} {% if not is_open %} [Closed] {% endif %}
+                                    {% if request.user.is_authenticated %}
+                                    <a href="#" class="toggle-favourite ml-3"
+                                       data-vendor-id="{{ vendor.id }}"
+                                       data-url="{% url 'toggle_favourite' vendor.id %}"
+                                       title="{% if is_favourite %}Remove from favourites{% else %}Add to favourites{% endif %}">
+                                        <i class="fa {% if is_favourite %}fa-heart text-danger{% else %}fa-heart-o{% endif %} fa-lg"></i>
+                                    </a>
+                                    {% endif %}
+                                </span>
+                                <div class="mt-1">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= avg_rating %}
+                                            <i class="fa fa-star text-warning"></i>
+                                        {% else %}
+                                            <i class="fa fa-star-o text-warning"></i>
+                                        {% endif %}
+                                    {% endfor %}
+                                    <small class="text-white ml-1">{{ avg_rating }} ({{ review_count }} review{{ review_count|pluralize }})</small>
+                                </div>
                                 <div class="text">
                                     {% if vendor.user_profile.address and vendor.user_profile.city %}
                                     <p>{{vendor.user_profile.address}}, {{vendor.user_profile.city}}</p>
@@ -39,7 +56,6 @@
                                         <span>Today :</span>
                                         {% for i in current_opening_hours %}
                                         <span>{% if i.is_closed %}Closed {% else %}{{i.from_hour}} - {{i.to_hour}}{% endif %}</span>
-                                        
                                         {% endfor %}
                                         <i class="icon-chevron-small-down"></i>
                                     </a>
@@ -54,18 +70,14 @@
                         {% endif %}
                     </div>
                 </div>
-                <!-- Column End -->
             </div>
-            <!-- Row End -->
         </div>
-        <!-- Container End -->
     </div>
 
     <div class="page-section">
         <div class="container">
             <div class="row">
                 <div class="col-lg-3 col-md-3 col-sm-4 col-xs-12 sticky-sidebar">
-                    
                     <div class="filter-wrapper">
                         <div class="categories-menu">
                             <h6><i class="icon-restaurant_menu"></i>Categories</h6>
@@ -80,45 +92,46 @@
                 <div class="col-lg-9 col-md-9 col-sm-8 col-xs-12">
                     <div class="tabs-holder horizontal">
                         <ul class="stickynav-tabs nav nav-tabs">
-                            <li class="active"><a data-toggle="tab" href="#home"><i class="icon- icon-room_service"></i>Menu</a></li>
-                            
+                            <li class="active"><a data-toggle="tab" href="#menu-tab"><i class="icon- icon-room_service"></i> Menu</a></li>
+                            <li><a data-toggle="tab" href="#reviews-tab"><i class="fa fa-star"></i> Reviews ({{ review_count }})</a></li>
                         </ul>
                         <div class="tab-content">
-                            <div id="home" class="tab-pane in active">
+
+                            <!-- ===== MENU TAB ===== -->
+                            <div id="menu-tab" class="tab-pane in active">
                                 <div class="menu-itam-holder">
-                                    
                                     <div id="menu-item-list-6272" class="menu-itam-list">
-                                        
                                         {% for category in categories %}
                                         <li class="element-title" id="menu-category-2">
-                                            <h5 class="text-color">{{ category  }}</h5>
+                                            <h5 class="text-color">{{ category }}</h5>
                                             <span>{{ category.description }}</span>
                                         </li>
                                         <ul>
                                             {% for food in category.fooditems.all %}
                                             <li>
-                                                <div class="image-holder"> <img src="{{food.image.url}}" alt=""></div>
+                                                <div class="image-holder"><img src="{{food.image.url}}" alt=""></div>
                                                 <div class="text-holder">
-                                                    <h6>{{ food }}</h6>
+                                                    <h6>
+                                                        {{ food }}
+                                                        {% if food.is_veg %}<span class="badge badge-success ml-1" style="font-size:10px;">Veg</span>{% endif %}
+                                                        {% if food.is_spicy %}<span class="badge badge-danger ml-1" style="font-size:10px;">Spicy</span>{% endif %}
+                                                    </h6>
                                                     <span>{{ food.description }}</span>
+                                                    {% if food.allergen_info %}
+                                                    <small class="text-muted d-block"><i class="fa fa-exclamation-circle"></i> {{ food.allergen_info }}</small>
+                                                    {% endif %}
                                                 </div>
                                                 <div class="price-holder">
                                                     <span class="price">${{ food.price }}</span>
-
                                                     <a href="#" class="decrease_cart" data-id="{{ food.id }}" data-url="{% url 'decrease_cart' food.id %}" style="margin-right: 20px;"><i class="icon-minus text-color"></i></a>
-                                                    <label  id="qty-{{food.id}}">
+                                                    <label id="qty-{{food.id}}">
                                                         {% if cart_items %}
-                                                        {% for item in cart_items %}
-                                                            {% if item.fooditem.id == food.id %}
-                                                                {{ item.quantity }}
-                                                            {% endif %}
-                                                        {% endfor %}
-                                                    {% else %}
-                                                        0
-                                                    {% endif %}
+                                                            {% for item in cart_items %}
+                                                                {% if item.fooditem.id == food.id %}{{ item.quantity }}{% endif %}
+                                                            {% endfor %}
+                                                        {% else %}0{% endif %}
                                                     </label>
                                                     <a href="#" class="add_to_cart" data-id="{{ food.id }}" data-url="{% url 'add_to_cart' food.id %}"><i class="icon-plus4 text-color"></i></a>
-                                                    
                                                 </div>
                                             </li>
                                             {% endfor %}
@@ -127,15 +140,78 @@
                                     </div>
                                 </div>
                             </div>
-                            
+
+                            <!-- ===== REVIEWS TAB ===== -->
+                            <div id="reviews-tab" class="tab-pane">
+                                <div class="p-3">
+                                    {% if request.user.is_authenticated and request.user.role == 2 %}
+                                    <div class="card mb-4">
+                                        <div class="card-body">
+                                            <h6>{% if user_review %}Update Your Review{% else %}Leave a Review{% endif %}</h6>
+                                            <form id="review-form">
+                                                {% csrf_token %}
+                                                <div class="form-group">
+                                                    <label>Rating</label>
+                                                    <div class="review-stars mb-2" style="direction:rtl;display:inline-block;">
+                                                        {% for val in "54321" %}
+                                                        <input type="radio" name="rating" id="star-{{ val }}" value="{{ val }}"
+                                                            {% if user_review and user_review.rating|stringformat:"s" == val %}checked{% endif %}
+                                                            style="display:none;">
+                                                        <label for="star-{{ val }}" class="fa fa-star" style="font-size:24px;color:#ccc;cursor:pointer;"></label>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <textarea name="comment" class="form-control" rows="3" placeholder="Share your experience...">{% if user_review %}{{ user_review.comment }}{% endif %}</textarea>
+                                                </div>
+                                                <button type="submit" class="btn btn-danger btn-sm"
+                                                    data-url="{% url 'submit_review' vendor.id %}">
+                                                    {% if user_review %}Update Review{% else %}Submit Review{% endif %}
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                    {% elif not request.user.is_authenticated %}
+                                    <p class="text-muted mb-3"><a href="{% url 'login' %}">Login</a> to leave a review.</p>
+                                    {% endif %}
+
+                                    {% if reviews %}
+                                        {% for review in reviews %}
+                                        <div class="media mb-3 p-3 border rounded">
+                                            <div class="media-body">
+                                                <div class="d-flex justify-content-between">
+                                                    <h6 class="mb-1">{{ review.user.get_full_name|default:review.user.email }}</h6>
+                                                    <small class="text-muted">{{ review.created_at|date:"M d, Y" }}</small>
+                                                </div>
+                                                <div>
+                                                    {% for i in "12345" %}
+                                                        <i class="fa fa-star{% if forloop.counter > review.rating %}-o{% endif %} text-warning"></i>
+                                                    {% endfor %}
+                                                </div>
+                                                {% if review.comment %}<p class="mt-1 mb-0">{{ review.comment }}</p>{% endif %}
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    {% else %}
+                                    <p class="text-muted text-center py-4">No reviews yet. Be the first to review!</p>
+                                    {% endif %}
+                                </div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
-                
             </div>
         </div>
     </div>
 </div>
 <!-- Main Section End -->
+
+<style>
+.review-stars label { color: #ccc; }
+.review-stars input:checked ~ label,
+.review-stars label:hover,
+.review-stars label:hover ~ label { color: #f8a401; }
+</style>
 
 {% endblock %}

@@ -56,8 +56,28 @@
                                                 Pincode : {{form.pin_code}}
                                             </div>
                                           </div>
-                                      
-                                        
+
+                                          {% if saved_addresses %}
+                                          <div class="row mt-2">
+                                            <div class="col-md-12">
+                                              <label><strong>Use a saved address:</strong></label>
+                                              <div class="list-group">
+                                                {% for addr in saved_addresses %}
+                                                <a href="#" class="list-group-item list-group-item-action use-saved-address"
+                                                   data-address="{{ addr.address }}"
+                                                   data-city="{{ addr.city }}"
+                                                   data-state="{{ addr.state }}"
+                                                   data-country="{{ addr.country }}"
+                                                   data-pincode="{{ addr.pincode }}">
+                                                  <strong>{{ addr.label }}</strong> — {{ addr.address }}, {{ addr.city }}
+                                                  {% if addr.is_default %}<span class="badge badge-primary ml-1">Default</span>{% endif %}
+                                                </a>
+                                                {% endfor %}
+                                              </div>
+                                            </div>
+                                          </div>
+                                          {% endif %}
+
                                     </div>
                                 </div>
                             </div>
@@ -124,12 +144,35 @@
                                             </li>
                                                 {% endfor %}
                                             {% endfor %}
+                                            {% if coupon_discount %}
+                                            <li style="list-style-type: none;" class="text-success">
+                                                Coupon ({{ applied_coupon }})
+                                                <span class="price float-right">- ${{ coupon_discount }}</span>
+                                            </li>
+                                            {% endif %}
                                             <li style="list-style-type: none;font-weight: 600;">
                                                 Total
                                                 <span class="price float-right">
                                                     <span class="currency">$</span>
                                                     <span id="total">{{grand_total}}</span>
                                                 </span>
+                                            </li>
+
+                                            <!-- Coupon Code Input -->
+                                            <li style="list-style-type: none;" class="mt-3">
+                                                <div class="input-group">
+                                                    <input type="text" id="coupon-code" class="form-control form-control-sm" placeholder="Coupon code">
+                                                    <div class="input-group-append">
+                                                        <button class="btn btn-sm btn-outline-secondary" id="apply-coupon-btn"
+                                                            data-url="{% url 'apply_coupon' %}">Apply</button>
+                                                    </div>
+                                                </div>
+                                                {% if applied_coupon %}
+                                                <small class="text-success">✓ {{ applied_coupon }} applied
+                                                    <a href="#" id="remove-coupon-btn" data-url="{% url 'remove_coupon' %}" class="text-danger ml-2">Remove</a>
+                                                </small>
+                                                {% endif %}
+                                                <div id="coupon-msg" class="mt-1" style="font-size:13px;"></div>
                                             </li>
                                             <br>
                                             <h5>SELECT PAYMENT METHOD</h5>

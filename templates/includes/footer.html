@@ -1,27 +1,58 @@
 {% load static %}
-
 <!-- Footer Start -->
 <footer id="footer" class="footer-style-2">
     <div class="footer-widget">
         <div class="container">
             <div class="row">
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
-                    <div class="widget widget-newsletter">
+                    <div class="widget widget-newsletter text-center">
                         <div class="widget-title">
-                            <h5>Subscribe to our Newsletter</h5>
+                            <h4 class="text-white">CONNECT WITH ME</h4>
                         </div>
-                        <div class="fieldset">
-                            <form action="#">
-                                <div class="field-holder">
-                                    <label>
-                                        <i class=" icon-envelope3"></i>
-                                        <input type="text" class="field-input" placeholder=" Enter Your Email Address...">
-                                    </label>
+                        <div class="contact-info">
+                            <div class="row justify-content-center">
+                                <!-- Contact Information Division -->
+                                <div class="col-md-6 info-section">
+                                    <div class="info-box">
+                                        <h5 class="text-white mb-4">Contact Information</h5>
+                                        <ul class="contact-details">
+                                            <li>
+                                                <i class="fas fa-envelope"></i>
+                                                <a href="mailto:prasubaran@gmail.com">prasubaran@gmail.com</a>
+                                            </li>
+                                            <li>
+                                                <i class="fab fa-linkedin"></i>
+                                                <a href="https://www.linkedin.com/in/prasun-baranwal-14913a288/">LinkedIn Profile</a>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-phone"></i>
+                                                <a href="tel:+917860967828">+91 7860967828</a>
+                                            </li>
+                                            <li>
+                                                <i class="fas fa-map-marker-alt"></i>
+                                                <span>ABV-IIITM Gwalior, Madhya Pradesh, India</span>
+                                            </li>
+                                        </ul>
+                                    </div>
                                 </div>
-                                <div class="field-holder btn-holder">
-                                    <input class="subscribe-btn bgcolor" type="submit" value="Sign Up">
+                                
+                                <!-- Follow Me Division -->
+                                <div class="col-md-6 social-section">
+                                    <div class="social-box text-center">
+                                        <h5 class="text-white mb-4">Follow Me</h5>
+                                        <div class="social-links-wrapper">
+                                            <div class="social-links">
+                                                <a href="#" class="social-icon" title="Instagram">
+                                                    <i class="fab fa-instagram fa-lg"></i>
+                                                </a>
+                                                <a href="#" class="social-icon" title="GitHub">
+                                                    <i class="fab fa-github fa-lg"></i>
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
                                 </div>
-                            </form>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -34,17 +65,163 @@
                 <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
                     <div class="copyright-inner">
                         <div class="copy-right">
-                            <p>© 2020 Foodbakery. All Rights Reserved. Developed By <a href="#">Rathan Kumar</a>
-                            </p>
+                            <p>© 2025 Foodbakery. All Rights Reserved. Developed By <a href="https://www.linkedin.com/in/prasun-baranwal-14913a288/">Prasun Baranwal</a></p>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div> <!-- /.cs-copyright -->
+    </div>
 </footer>
-<!-- Footer End -->
-</div>
 
+<!-- Add Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<!-- Additional CSS for styling -->
+<style>
+    .footer-style-2 {
+        background-color: #2c3e50;
+        padding: 40px 0 0;
+        color: #ffffff;
+    }
+
+    .widget-title h4 {
+        font-size: 32px;
+        margin-bottom: 40px;
+        font-weight: 700;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        position: relative;
+        display: inline-block;
+        padding-bottom: 15px;
+    }
+
+    .widget-title h4::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background-color: #3498db;
+    }
+
+    .info-box, .social-box {
+        padding: 30px;
+        background-color: rgba(52, 73, 94, 0.5);
+        border-radius: 10px;
+        margin-bottom: 30px;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+
+    .info-box:hover, .social-box:hover {
+        transform: translateY(-5px);
+    }
+
+    .contact-details {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .contact-details li {
+        margin-bottom: 20px;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+    }
+
+    .contact-details li i {
+        margin-right: 15px;
+        color: #3498db;
+        width: 20px;
+        font-size: 18px;
+    }
+
+    .contact-details li .fa-phone {
+        transform: scaleX(-1);
+    }
+
+    .contact-details a, .social-icon {
+        color: #ecf0f1;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+
+    .contact-details a:hover {
+        color: #3498db;
+    }
+
+    .social-links-wrapper {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 150px;
+    }
+
+    .social-links {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+    }
+
+    .social-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background-color: #34495e;
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .social-icon:hover {
+        background-color: #3498db;
+        transform: translateY(-3px);
+    }
+
+    .copyright-sec {
+        background-color: #34495e;
+        padding: 20px 0;
+        margin-top: 40px;
+    }
+
+    .copy-right p {
+        margin: 0;
+        text-align: center;
+        color: #ecf0f1;
+    }
+
+    .copy-right a {
+        color: #3498db;
+        text-decoration: none;
+    }
+
+    .copy-right a:hover {
+        text-decoration: underline;
+    }
+
+    .text-white {
+        color: #ffffff !important;
+    }
+
+    .mb-4 {
+        margin-bottom: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+        .info-box, .social-box {
+            margin: 15px;
+        }
+        
+        .widget-title h4 {
+            font-size: 28px;
+        }
+    }
+</style>
 <script src="{% static 'js/scripts.js' %}"></script>
-	<script src="{% static 'js/functions.js' %}"></script>
+<script src="{% static 'js/functions.js' %}"></script>

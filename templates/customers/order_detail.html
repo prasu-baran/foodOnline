@@ -119,6 +119,37 @@
                                                     <span>Call - +91 0011223344</span>
                                                 </div>
                                             </div>
+                                            {% if order.coupon_code %}
+                                            <p class="text-success mt-2"><i class="fa fa-tag"></i> Coupon <b>{{ order.coupon_code }}</b> saved you ${{ order.coupon_discount }}.</p>
+                                            {% endif %}
+                                            <div class="mt-3">
+                                                <a href="{% url 'reorder' order.order_number %}" class="btn btn-danger"><i class="fa fa-repeat"></i> Reorder</a>
+                                            </div>
+
+                                            {% for rv in reviewed_vendors %}
+                                            <hr>
+                                            <h6>Rate {{ rv.vendor.vendor_name }}</h6>
+                                            <form class="review-form-inline" data-url="{% url 'submit_review' rv.vendor.id %}">
+                                                {% csrf_token %}
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <label class="mr-2 mb-0">Rating:</label>
+                                                    <div class="review-stars-inline" style="direction:rtl;display:inline-block;">
+                                                        {% for val in "54321" %}
+                                                        <input type="radio" name="rating" id="star-od-{{ rv.vendor.id }}-{{ val }}" value="{{ val }}"
+                                                            {% if rv.existing_review and rv.existing_review.rating|stringformat:"s" == val %}checked{% endif %}
+                                                            style="display:none;">
+                                                        <label for="star-od-{{ rv.vendor.id }}-{{ val }}" class="fa fa-star" style="font-size:20px;color:#ccc;cursor:pointer;"></label>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                                <textarea name="comment" class="form-control form-control-sm mb-2" rows="2"
+                                                    placeholder="Write a review...">{% if rv.existing_review %}{{ rv.existing_review.comment }}{% endif %}</textarea>
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                                    {% if rv.existing_review %}Update Review{% else %}Submit Review{% endif %}
+                                                </button>
+                                            </form>
+                                            {% endfor %}
+
                                         </div>
                                     </div>
                                 </div>

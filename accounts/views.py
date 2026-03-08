@@ -1,9 +1,11 @@
+import json
 from datetime import datetime
-from django.shortcuts import render,redirect
+from django.shortcuts import render, redirect
 from django.shortcuts import HttpResponse
+from django.db.models import Sum
 
-from orders.models import Order
-from .utils import detectUser,send_verification_email,send_password_reset_email
+from orders.models import Order, OrderedFood
+from .utils import detectUser, send_verification_email, send_password_reset_email
 from .forms import UserForm,UserProfileForm
 from .models import User,UserProfile
 from django.contrib import messages,auth
@@ -79,7 +81,7 @@ def registerVendor(request):
            user.save()
            vendor =v_form.save(commit=False)
            vendor.user=user
-           vendor_name=v_form.cleaned_data[vendor_name]
+           vendor_name=v_form.cleaned_data['vendor_name']
            vendor.vendor_slug=slugify(vendor_name)+'-'+str(user.id)
            user_profile=UserProfile.objects.get(user=user)
            vendor.user_profile=user_profile
@@ -139,32 +141,62 @@ def custdashboard(request):
     }
     return render(request,'accounts/custdashboard.html', context)
 
-
 @login_required(login_url='login')
 @user_passes_test(check_role_vendor)
 def vendordashboard(request):
     vendor = Vendor.objects.get(user=request.user)
-    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('created_at')
+    orders = Order.objects.filter(vendors__in=[vendor.id], is_ordered=True).order_by('-created_at')
     recent_orders = orders[:10]
 
     # current month's revenue
     current_month = datetime.now().month
-    current_month_orders = orders.filter(vendors__in=[vendor.id], created_at__month=current_month)
+    current_month_orders = orders.filter(created_at__month=current_month)
     current_month_revenue = 0
     for i in current_month_orders:
         current_month_revenue += i.get_total_by_vendor()['subtotal']
+
     # total revenue
     total_revenue = 0
     for i in orders:
         total_revenue += i.get_total_by_vendor()['subtotal']
+
+    # Last 6 months revenue for chart
+    now = datetime.now()
+    monthly_data = []
+    month_labels = []
+    for i in range(5, -1, -1):
+        month = now.month - i
+        year = now.year
+        while month <= 0:
+            month += 12
+            year -= 1
+        month_orders = orders.filter(created_at__year=year, created_at__month=month)
+        revenue = sum(o.get_total_by_vendor()['subtotal'] for o in month_orders)
+        monthly_data.append(round(revenue, 2))
+        month_labels.append(datetime(year, month, 1).strftime('%b %Y'))
+
+    # Top 5 selling items
+    top_items_qs = (
+        OrderedFood.objects.filter(order__in=orders)
+        .values('fooditem__food_title')
+        .annotate(total_qty=Sum('quantity'))
+        .order_by('-total_qty')[:5]
+    )
+    top_item_labels = [item['fooditem__food_title'] for item in top_items_qs]
+    top_item_data = [item['total_qty'] for item in top_items_qs]
+
     context = {
         'orders': orders,
         'orders_count': orders.count(),
         'recent_orders': recent_orders,
         'total_revenue': total_revenue,
         'current_month_revenue': current_month_revenue,
-   }
-    
+        'monthly_data': json.dumps(monthly_data),
+        'month_labels': json.dumps(month_labels),
+        'top_item_labels': json.dumps(top_item_labels),
+        'top_item_data': json.dumps(top_item_data),
+    }
+
     return render(request, 'accounts/vendordashboard.html', context)
 
 @login_required(login_url='login')
