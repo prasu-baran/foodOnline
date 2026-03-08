@@ -235,26 +235,4 @@ Visit **http://127.0.0.1:8000/admin/** and:
 - `.env-sample` is committed as a template with empty values — safe to share
 - `media/` uploads are gitignored — only code is pushed
 
-To push to GitHub safely:
 
-```bash
-git add .
-git commit -m "your message"
-git push origin main
-```
-
----
-
-## Screenshots
-
-> Add screenshots here after running the project.
-
-| Page | Preview |
-|---|---|
-| Home | *(screenshot)* |
-| Marketplace Listing | *(screenshot)* |
-| Vendor Detail + Reviews | *(screenshot)* |
-| Cart & Checkout + Coupon | *(screenshot)* |
-| Vendor Dashboard + Charts | *(screenshot)* |
-| My Favourites | *(screenshot)* |
-| My Addresses | *(screenshot)* |
